@@ -1,6 +1,7 @@
 """gridpp."""
 import logging
 import numpy as np
+import numpy.ma as ma
 try:
     import gridpp
 except ImportError:
@@ -59,6 +60,14 @@ def horizontal_oi(geo, background, observations, gelevs, hlength=10000.,
     glons = np.transpose(glons)
     background = np.transpose(background)
     gelevs = np.transpose(gelevs)
+
+    idx = (elevs[:] > 0.0) & (elevs[:] < 3000.0)
+    idn = np.where(idx)[0][:]
+
+    if (len(idn) < 1):
+        print("For sigma_vv we set a default height")
+        elevs[:] = 400.0
+    
 
     logging.debug("glats.shape=%s glons.shape=%s gelevs.shape=%s", glats.shape,
                   glons.shape, gelevs.shape)

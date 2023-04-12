@@ -333,6 +333,20 @@ def parse_args_first_guess_for_oi(argv):
     parser.add_argument('--sm_converter', type=str, default="none", help="", nargs="?",
                         choices=["none", "smp"])
 
+    parser.add_argument('-sigma_vv_file', type=str, default=None, help="sigma_vv file", nargs="?")
+    parser.add_argument('-sigma_vv_format', type=str, default=None,
+                        help="sigma_vv file format", nargs="?",
+                        choices=["netcdf"])
+    parser.add_argument('--sigma_vv_converter', type=str, default="none", help="", nargs="?",
+                        choices=["none", "sigma_vvp"])
+
+    parser.add_argument('-sigma_vh_file', type=str, default=None, help="sigma_vh file", nargs="?")
+    parser.add_argument('-sigma_vh_format', type=str, default=None,
+                        help="sigma_vh file format", nargs="?",
+                        choices=["netcdf"])
+    parser.add_argument('--sigma_vh_converter', type=str, default="none", help="", nargs="?",
+                        choices=["none", "sigma_vhp"])
+
     parser.add_argument('-laf_file', type=str, default=None,
                         help="Land area fraction grib file", nargs="?")
     parser.add_argument('-laf_format', type=str, default=None,
@@ -354,7 +368,7 @@ def parse_args_first_guess_for_oi(argv):
                         default="first_guess.yml", nargs="?")
     parser.add_argument('variables', nargs="+",
                         choices=["air_temperature_2m", "relative_humidity_2m",
-                                 "surface_snow_thickness", "cloud_base", "surface_soil_moisture"],
+                                 "surface_snow_thickness", "cloud_base", "surface_soil_moisture", "sigma_vv", "sigma_vh"],
                         help="Variables to create first guess for")
     parser.add_argument('--debug', action="store_true", help="Debug",
                         required=False, default=False)
@@ -453,6 +467,20 @@ def first_guess_for_oi(**kwargs):
                 fileformat = kwargs["sm_format"]
             if "sm_converter" in kwargs and kwargs["sm_converter"] is not None:
                 converter = kwargs["sm_converter"]
+        elif var == "sigma_vv":
+            if "sigma_vv_file" in kwargs and kwargs["sigma_vv_file"] is not None:
+                inputfile = kwargs["sigma_vv_file"]
+            if "sigma_vv_format" in kwargs and kwargs["sigma_vv_format"] is not None:
+                fileformat = kwargs["sigma_vv_format"]
+            if "sigma_vv_converter" in kwargs and kwargs["sigma_vv_converter"] is not None:
+                converter = kwargs["sigma_vv_converter"]
+        elif var == "sigma_vh":
+            if "sigma_vh_file" in kwargs and kwargs["sigma_vh_file"] is not None:
+                inputfile = kwargs["sigma_vh_file"]
+            if "sigma_vh_format" in kwargs and kwargs["sigma_vh_format"] is not None:
+                fileformat = kwargs["sigma_vh_format"]
+            if "sigma_vh_converter" in kwargs and kwargs["sigma_vh_converter"] is not None:
+                converter = kwargs["sigma_vh_converter"]
         elif var == "altitude":
             if "altitude_file" in kwargs and kwargs["altitude_file"] is not None:
                 inputfile = kwargs["altitude_file"]
@@ -1438,6 +1466,14 @@ def parse_args_oi2soda(argv):
                         default=None)
     parser.add_argument('--sm_var', type=str, help="NetCDF variable name for SM", required=False,
                         default="surface_soil_moisture")
+    parser.add_argument('--sigma_vv_file', type=str, help="NetCDF file for sigma_vv", required=False,
+                        default=None)
+    parser.add_argument('--sigma_vv_var', type=str, help="NetCDF variable name for sigma_vv", required=False,
+                        default="sigma_vv")
+    parser.add_argument('--sigma_vh_file', type=str, help="NetCDF file for sigma_vh", required=False,
+                        default=None)
+    parser.add_argument('--sigma_vh_var', type=str, help="NetCDF variable name for sigma_vh", required=False,
+                        default="sigma_vh")
     parser.add_argument('dtg', nargs="?", type=str, help="DTG", default=None)
     parser.add_argument("-o", dest="output", type=str, help="Output file", default=None)
     parser.add_argument('--debug', action="store_true", help="Debug", required=False,
@@ -1461,6 +1497,8 @@ def run_oi2soda(**kwargs):
     rh2m_file = kwargs["rh2m_file"]
     sd_file = kwargs["sd_file"]
     sm_file = kwargs["sm_file"]
+    sigma_vv_file = kwargs["sigma_vv_file"]
+    sigma_vh_file = kwargs["sigma_vh_file"]
     output = kwargs["output"]
 
     t2m = None
@@ -1475,9 +1513,17 @@ def run_oi2soda(**kwargs):
     s_m = None
     if sm_file is not None:
         s_m = {"file": sm_file, "var": kwargs["sm_var"]}
+    sigma_vv_m = None
+    if sigma_vv_file is not None:
+        sigma_vv_m = {"file": sigma_vv_file, "var": kwargs["sigma_vv_var"]}
+    sigma_vh_m = None
+    if sigma_vh_file is not None:
+        sigma_vh_m = {"file": sigma_vh_file, "var": kwargs["sigma_vh_var"]}
 
     dtg = datetime.strptime(kwargs["dtg"], "%Y%m%d%H")
-    surfex.oi2soda(dtg, t2m=t2m, rh2m=rh2m, s_d=s_d, s_m=s_m, output=output)
+
+    surfex.oi2soda(dtg, t2m=t2m, rh2m=rh2m, s_d=s_d, s_m=s_m, sigma_vv_m=sigma_vv_m, sigma_vh_m=sigma_vh_m, output=output)
+
 
 
 def parse_args_lsm_file_assim(argv):
@@ -2532,6 +2578,80 @@ def parse_sentinel_obs(argv):
         kwargs.update({arg: getattr(args, arg)})
     return kwargs
 
+def parse_sentinel_sigma_vv_obs(argv):
+    """Parse the command line input arguments for sentinel observations.
+
+    Args:
+        argv (list): List with arguments.
+
+    Returns:
+        dict: Parsed arguments.
+
+    """
+    parser = ArgumentParser("Create Sentinel-1 obs")
+    parser.add_argument('--debug', action="store_true", help="Debug",
+                        required=False, default=False)
+    parser.add_argument('--options', type=open, action=LoadFromFile, help="Load options from file")
+    parser.add_argument('-v', '--varname', dest="varname", type=str, help="Variable name",
+                        default="sigma_vv", required=False)
+    parser.add_argument('-fg', dest="fg_file", type=str, help="First guess file",
+                        default=None, required=True)
+    parser.add_argument('-i', dest="infiles", type=str, nargs="+", help="Infiles",
+                        default=None, required=True)
+    parser.add_argument('-step', dest="thinning", type=int, help="Thinning step",
+                        required=False, default=4)
+    parser.add_argument('-indent', dest="indent", type=int, help="Indent",
+                        required=False, default=None)
+    parser.add_argument('-o', '--output', dest="output", type=str, help="Output image",
+                        default=None, required=False)
+
+    if len(argv) == 0:
+        parser.print_help()
+        sys.exit()
+
+    args = parser.parse_args(argv)
+    kwargs = {}
+    for arg in vars(args):
+        kwargs.update({arg: getattr(args, arg)})
+    return kwargs
+
+def parse_sentinel_sigma_vh_obs(argv):
+    """Parse the command line input arguments for sentinel observations.
+
+    Args:
+        argv (list): List with arguments.
+
+    Returns:
+        dict: Parsed arguments.
+
+    """
+    parser = ArgumentParser("Create Sentinel-1 obs")
+    parser.add_argument('--debug', action="store_true", help="Debug",
+                        required=False, default=False)
+    parser.add_argument('--options', type=open, action=LoadFromFile, help="Load options from file")
+    parser.add_argument('-v', '--varname', dest="varname", type=str, help="Variable name",
+                        default="sigma_vh", required=False)
+    parser.add_argument('-fg', dest="fg_file", type=str, help="First guess file",
+                        default=None, required=True)
+    parser.add_argument('-i', dest="infiles", type=str, nargs="+", help="Infiles",
+                        default=None, required=True)
+    parser.add_argument('-step', dest="thinning", type=int, help="Thinning step",
+                        required=False, default=4)
+    parser.add_argument('-indent', dest="indent", type=int, help="Indent",
+                        required=False, default=None)
+    parser.add_argument('-o', '--output', dest="output", type=str, help="Output image",
+                        default=None, required=False)
+
+    if len(argv) == 0:
+        parser.print_help()
+        sys.exit()
+
+    args = parser.parse_args(argv)
+    kwargs = {}
+    for arg in vars(args):
+        kwargs.update({arg: getattr(args, arg)})
+    return kwargs
+
 
 def run_cryoclim_pseuodoobs(**kwargs):
     """Create pseudo obs from cryoclim."""
@@ -2559,11 +2679,28 @@ def run_sentinel_obs(**kwargs):
     varname = kwargs["varname"]
     indent = kwargs["indent"]
 
-    grid_lons, grid_lats, grid_sm_class = surfex.read_sentinel_nc(infiles)
+    grid_lons, grid_lats, grid_sm_class, grid_sigma_class = surfex.read_sentinel_nc(infiles, varname)
     fg_geo, validtime, grid_sm_fg, __, __ = surfex.read_first_guess_netcdf_file(fg_file,
                                                                                 varname)
     q_c = surfex.sm_obs_sentinel(validtime, grid_sm_class, grid_lons, grid_lats, step, fg_geo,
                                  grid_sm_fg)
+    q_c.write_output(output, indent=indent)
+
+def run_sentinel_sigma_obs(**kwargs):
+    """Create obs from Sentinel-1"""
+    fg_file = kwargs["fg_file"]
+    infiles = kwargs["infiles"]
+    step = kwargs["thinning"]
+    output = kwargs["output"]
+    varname = kwargs["varname"]
+    indent = kwargs["indent"]
+
+    grid_lons, grid_lats, grid_sm_class, grid_sigma_class = surfex.read_sentinel_nc(infiles, varname)
+    fg_geo, validtime, grid_sigma_fg, __, __ = surfex.read_first_guess_netcdf_file(fg_file,
+                                                                                varname)
+
+    q_c = surfex.sigma_obs_sentinel(varname, validtime, grid_sigma_class, grid_lons, grid_lats, step, fg_geo,
+                                       grid_sigma_fg)
     q_c.write_output(output, indent=indent)
 
 

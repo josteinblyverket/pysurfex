@@ -14,7 +14,7 @@ from .run import BatchJob, InputDataToSurfexBinaries, JsonInputData, JsonInputDa
     PerturbedOffline, clean_working_dir, create_working_dir
 from .assim import horizontal_oi
 from .obs import Observation, ObservationSet, ObservationFromTitanJsonFile, JsonObservationSet, \
-    MetFrostObservations, NetatmoObservationSet, sm_obs_sentinel, snow_pseudo_obs_cryoclim, \
+    MetFrostObservations, NetatmoObservationSet, sm_obs_sentinel, sigma_obs_sentinel, snow_pseudo_obs_cryoclim, \
     get_datasources, set_geo_from_obs_set
 from .forcing import SurfexForcing, SurfexOutputForcing, AsciiOutput, NetCDFOutput, \
     SurfexNetCDFForcing, modify_forcing, write_formatted_array, set_forcing_config, \
@@ -41,11 +41,11 @@ from .cli import parse_args_bufr2json, parse_args_create_forcing, parse_args_fir
     parse_args_plot_points, parse_args_qc2obsmon, parse_args_set_geo_from_obs_set, \
     parse_args_set_geo_from_stationlist, parse_args_shape2ign, parse_args_surfex_binary, \
     parse_args_titan, parse_cryoclim_pseudoobs, parse_merge_namelist_settings, \
-    parse_merge_toml_settings, parse_plot_timeseries_args, parse_sentinel_obs, \
+    parse_merge_toml_settings, parse_plot_timeseries_args, parse_sentinel_obs, parse_sentinel_sigma_vv_obs, parse_sentinel_sigma_vh_obs, \
     parse_args_create_namelist, \
     parse_timeseries2json, run_plot_points, run_bufr2json, run_cryoclim_pseuodoobs, run_gridpp, \
     run_lsm_file_assim, run_masterodb, run_merge_namelist_settings, run_merge_toml_settings, \
-    run_oi2soda, run_plot_timeseries_from_json, run_sentinel_obs, run_shape2ign, \
+    run_oi2soda, run_plot_timeseries_from_json, run_sentinel_obs, run_sentinel_sigma_obs, run_shape2ign, \
     run_surfex_binary, run_timeseries2json, run_titan, first_guess_for_oi, run_create_namelist, \
     set_geo_from_stationlist, hm2pysurfex, merge_qc_data, LoadFromFile
 from .namelist import Namelist, BaseNamelist, PgdInputData, PrepInputData, SodaInputData, \
@@ -193,6 +193,8 @@ __all__ = ["AsciiOutput",
            "parse_merge_toml_settings",
            "parse_plot_timeseries_args",
            "parse_sentinel_obs",
+           "parse_sentinel_sigma_vv_obs",
+           "parse_sentinel_sigma_vh_obs",
            "parse_timeseries2json",
            "parse_filepattern",
            "read_cryoclim_nc",
@@ -213,6 +215,7 @@ __all__ = ["AsciiOutput",
            "run_oi2soda",
            "run_plot_timeseries_from_json",
            "run_sentinel_obs",
+           "run_sentinel_sigma_obs",
            "run_shape2ign",
            "run_surfex_binary",
            "run_timeseries2json",
@@ -225,6 +228,7 @@ __all__ = ["AsciiOutput",
            "set_input_object",
            "shape2ign",
            "sm_obs_sentinel",
+           "sigma_obs_sentinel",
            "snow_pseudo_obs_cryoclim",
            "write_analysis_netcdf_file",
            "write_formatted_array",

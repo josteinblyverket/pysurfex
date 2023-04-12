@@ -256,6 +256,12 @@ class Converter(object):
         elif self.name == "cloud_base":
             self.cloud_base = self.create_variable(fileformat, defs,
                                                    conf[self.name]["cloud_base"])
+        elif self.name == "sigma_vvp":
+            self.sigma_vvp = self.create_variable(fileformat, defs,
+                                                   conf[self.name]["sigma_vv"])
+        elif self.name == "sigma_vhp":
+            self.sigma_vvp = self.create_variable(fileformat, defs,
+                                                   conf[self.name]["sigma_vh"])
         else:
             raise NotImplementedError("Converter " + self.name + " not implemented")
 

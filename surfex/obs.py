@@ -1115,6 +1115,94 @@ def sm_obs_sentinel(validtime, grid_sm_class, grid_lons, grid_lats, step, fg_geo
     logging.info("Pseudo-observations created: %s", len(obs))
     return surfex.QCDataSet(validtime, obs, flags, cis, lafs, providers)
 
+def sigma_obs_sentinel(varname, validtime, grid_sigma_class, grid_lons, grid_lats, step, fg_geo, grid_sigma_fg,
+                       fg_threshold=1.):
+    """Sentinel.
+
+    Args:
+        validtime (_type_): _description_
+        grid_sm_class (_type_): _description_
+        grid_lons (_type_): _description_
+        grid_lats (_type_): _description_
+        step (_type_): _description_
+        fg_geo (_type_): _description_
+        grid_sm_fg (_type_): _description_
+        fg_threshold (_type_, optional): _description_. Defaults to 1..
+
+    Returns:
+        _type_: _description_
+
+    """
+    n_x = grid_lons.shape[0]
+    n_y = grid_lons.shape[1]
+
+    n_x = int(n_x / step)
+    n_y = int(n_y / step)
+
+    # TODO rewrite to use lonlatvals geo
+    counter = 0
+    iii = 0
+    res_lons = []
+    res_lats = []
+    p_sigma_class = {}
+
+    for i in range(0, n_x):
+        jjj = 0
+        print("here??1")
+        for __ in range(0, n_y):
+            res_lons.append(grid_lons[iii, jjj])
+            res_lats.append(grid_lats[iii, jjj])
+            p_sigma_class.update({str(counter): grid_sigma_class[iii, jjj]})
+            counter = counter + 1
+            jjj = jjj + step
+        iii = iii + step
+
+    print("here??2")
+    p_fg_sigma = surfex.grid2points(fg_geo.lons, fg_geo.lats,
+                                 np.asarray(res_lons), np.asarray(res_lats),
+                                 grid_sigma_fg)
+
+    # Ordering of points must be the same.....
+    obs = []
+    flags = []
+    cis = []
+    lafs = []
+    providers = []
+    for i in range(0, p_fg_sigma.shape[0]):
+
+        p_sigma_fg = p_fg_sigma[i]
+        print("here??3")
+        if not np.isnan(p_sigma_fg):
+            # Check if in grid
+            neighbours = surfex.get_num_neighbours(fg_geo.lons, fg_geo.lats,
+                                                   float(res_lons[i]), float(res_lats[i]),
+                                                   distance=2500.)
+
+            if neighbours > 0:
+                obs_value = np.nan
+                if ( (p_sigma_class[str(i)] > 1) or (p_sigma_class[str(i)] < 0) ):
+                    if ( (p_sigma_fg <= fg_threshold) ): 
+                        obs_value = p_sigma_fg
+                    else:
+                        obs_value = 999
+                else:
+                    obs_value = p_sigma_class[str(i)]
+
+                if not np.isnan(obs_value):
+                    # Convert to dB
+#                    obs_value = 10.0*np.log10(obs_value)
+                    flags.append(0)
+                    cis.append(0)
+                    lafs.append(0)
+                    providers.append(0)
+                    obs.append(surfex.Observation(validtime, res_lons[i], res_lats[i], obs_value,
+                                                  varname=varname))
+
+    logging.info("Possible pseudo-observations: %s", n_x * n_y)
+    logging.info("Pseudo-observations created: %s", len(obs))
+    return surfex.QCDataSet(validtime, obs, flags, cis, lafs, providers)
+
+
 
 def set_geo_from_obs_set(obs_time, obs_type, varname, inputfile, lonrange=None, latrange=None):
     """Set geometry from obs file.

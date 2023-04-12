@@ -199,6 +199,8 @@ setup(
         'bin/bufr2json',
         'bin/cryoclim_pseudoobs',
         'bin/sentinel_obs',
+        'bin/sentinel_sigma_vv_obs',
+	'bin/sentinel_sigma_vh_obs',
         'bin/dump_environ',
         'bin/shape2ign'
     ],

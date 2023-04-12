@@ -132,11 +132,11 @@ TEB = "NONE"                         # Assimilation method for TEB tile: "NONE"|
 LOBSHEADER = false                          # ASCII observation file has header
 CFILE_FORMAT_OBS = "ASCII"                  # File format for observations when using SODA: "ASCII"|"FA"
 LOBSNAT = false                             # Observation ASCII file only contains nature points
-COBS_M = ["T2M","HU2M","WG2 ","LAI","SWE"]  # Observation types
-NNCO = [1, 1, 0, 0, 1]                      # Active observation types
-XERROBS_M = [1.0, 0.1, 0.1, 0.1, 20.0]      # Observation error (used in EKF)
+COBS_M = ["T2M","HU2M","WG2 ","LAI","SWE","SIGMA_VV","SIGMA_VH"]  # Observation types
+NNCO = [1, 1, 0, 0, 0, 1, 1]                      # Active observation types
+XERROBS_M = [1.0, 0.1, 0.1, 0.1, 20.0, -1.0, -1.0]      # Observation error (used in EKF)
 LSWE = false                                # Assimilate SWE, if false assimilate snow depth
-NOBSTYPE_M=2                                # Number of assimilated observations in the EnKF
+NOBSTYPE_M=4                                # Number of assimilated observations in the EnKF
 
 [SURFEX.ASSIM.SEA]
 CFILE_FORMAT_SST = "ASCII"           # File format for SST input when using SODA and SEA == "INPUT": "ASCII"|"FA"

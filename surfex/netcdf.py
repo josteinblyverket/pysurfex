@@ -591,6 +591,8 @@ def create_netcdf_first_guess_template(my_variables, my_nx, my_ny, fname="raw.nc
                      "altitude": "altitude",
                      "surface_snow_thickness": "surface_snow_thickness",
                      "surface_soil_moisture": "surface_soil_moisture",
+                     "sigma_vv": "sigma_vv",
+                     "sigma_vh": "sigma_vh",
                      "cloud_base": "cloud_base",
                      "land_area_fraction": "land_area_fraction"}
     long_name = {"air_temperature_2m": "Screen level temperature (T2M)",
@@ -598,6 +600,8 @@ def create_netcdf_first_guess_template(my_variables, my_nx, my_ny, fname="raw.nc
                  "altitude": "Altitude",
                  "surface_snow_thickness": "Surface snow thickness",
                  "surface_soil_moisture": "Surface soil moisture",
+                 "sigma_vv": "backscatter VV-pol",
+                 "sigma_vh": "backscatter VH-pol",
                  "cloud_base": "Cloud base",
                  "land_area_fraction": "Land Area Fraction"}
     units = {"air_temperature_2m": "K",
@@ -605,6 +609,8 @@ def create_netcdf_first_guess_template(my_variables, my_nx, my_ny, fname="raw.nc
              "altitude": "m",
              "surface_snow_thickness": "m",
              "surface_soil_moisture": "m3/m3",
+             "sigma_vv": "dB",
+             "sigma_vh": "dB",
              "cloud_base": "m",
              "land_area_fraction": "1"}
     fillvalue = {"air_temperature_2m": "9.96921e+36",
@@ -612,6 +618,8 @@ def create_netcdf_first_guess_template(my_variables, my_nx, my_ny, fname="raw.nc
                  "altitude": "9.96921e+36",
                  "surface_snow_thickness": "9.96921e+36",
                  "surface_soil_moisture": "9.96921e+36",
+                 "sigma_vv": "9.96921e+36",
+                 "sigma_vh": "9.96921e+36",
                  "cloud_base": "9.96921e+36",
                  "land_area_fraction": "9.96921e+36"}
 
@@ -756,7 +764,7 @@ def write_analysis_netcdf_file(filename, field, var, validtime, elevs, lafs, new
     file_handler.close()
 
 
-def oi2soda(dtg, t2m=None, rh2m=None, s_d=None, s_m=None, output=None):
+def oi2soda(dtg, t2m=None, rh2m=None, s_d=None, s_m=None, sigma_vv_m=None, sigma_vh_m=None, output=None):
     """Convert analysis to ASCII obs file for SODA.
 
     Args:
@@ -793,6 +801,9 @@ def oi2soda(dtg, t2m=None, rh2m=None, s_d=None, s_m=None, output=None):
     rh2m_var = None
     sd_var = None
     sm_var = None
+    sigma_vv_var = None
+    sigma_vh_var = None
+
     if t2m is not None:
         t2m_fh = netCDF4.Dataset(t2m["file"], "r")
         logging.debug("T2m %s %s", t2m["var"], t2m_fh.variables[t2m["var"]].shape)
@@ -844,6 +855,32 @@ def oi2soda(dtg, t2m=None, rh2m=None, s_d=None, s_m=None, output=None):
         sm_var = sm_var.filled(fill_value=999.)
         sm_var = sm_var.tolist()
 
+    if sigma_vv_m is not None:
+        sigma_vv_fh = netCDF4.Dataset(sigma_vv_m["file"], "r")
+        logging.debug("sigma_vv %s %s", sigma_vv_m["var"], sigma_vv_fh.variables[sigma_vv_m["var"]].shape)
+
+        i = i + 1
+        n_x, n_y = check_input_to_soda_dimensions(n_x, n_y, sigma_vv_fh.variables[sigma_vv_m["var"]].shape[1],
+                                                  sigma_vv_fh.variables[sigma_vv_m["var"]].shape[0])
+
+        sigma_vv_var = sigma_vv_fh.variables[sigma_vv_m["var"]][:]
+        sigma_vv_var = sigma_vv_var.reshape([n_y * n_x], order="C")
+        sigma_vv_var = sigma_vv_var.filled(fill_value=999.)
+        sigma_vv_var = sigma_vv_var.tolist()
+
+    if sigma_vh_m is not None:
+        sigma_vh_fh = netCDF4.Dataset(sigma_vh_m["file"], "r")
+        logging.debug("sigma_vh %s %s", sigma_vh_m["var"], sigma_vh_fh.variables[sigma_vh_m["var"]].shape)
+
+        i = i + 1
+        n_x, n_y = check_input_to_soda_dimensions(n_x, n_y, sigma_vh_fh.variables[sigma_vh_m["var"]].shape[1],
+                                                  sigma_vh_fh.variables[sigma_vh_m["var"]].shape[0])
+
+        sigma_vh_var = sigma_vh_fh.variables[sigma_vh_m["var"]][:]
+        sigma_vh_var = sigma_vh_var.reshape([n_y * n_x], order="C")
+        sigma_vh_var = sigma_vh_var.filled(fill_value=999.)
+        sigma_vh_var = sigma_vh_var.tolist()
+
     if i == 0:
         raise Exception("You must specify at least one file to read from!")
 
@@ -857,10 +894,14 @@ def oi2soda(dtg, t2m=None, rh2m=None, s_d=None, s_m=None, output=None):
                 line = line + " " + str(t2m_var[i])
             if rh2m_var is not None:
                 line = line + " " + str(rh2m_var[i])
-            if sd_var is not None:
-                line = line + " " + str(sd_var[i])
+            if sigma_vv_var is not None:
+                line = line + " " + str(sigma_vv_var[i])
+            if sigma_vh_var is not None:
+                line = line + " " + str(sigma_vh_var[i])
             if sm_var is not None:
                 line = line + " " + str(sm_var[i])
+            if sd_var is not None:
+                line = line + " " + str(sd_var[i])
             line = line + "\n"
             out.write(line)
             logging.debug("i %s", i)
@@ -900,7 +941,7 @@ def read_cryoclim_nc(infiles):
     return grid_lons, grid_lats, grid_snow_class
 
 
-def read_sentinel_nc(infiles):
+def read_sentinel_nc(infiles, varname):
     """Read sentinel nc files.
 
     Args:
@@ -909,6 +950,7 @@ def read_sentinel_nc(infiles):
     """
     grid_lons = None
     grid_lats = None
+    grid_sigma = None
     grid_sm = None
     for filename in infiles:
         if os.path.exists(filename):
@@ -916,9 +958,16 @@ def read_sentinel_nc(infiles):
             nch = netCDF4.Dataset(filename, "r")
             grid_lons = nch["LON"][:]
             grid_lats = nch["LAT"][:]
-            grid_sm = nch["surface_soil_moisture"][:]
-#            grid_sm[grid_snow_class_read == 1] = 1
-#            grid_snow_class[grid_snow_class_read == 0] = 0
+
+            if varname == "soil_moisture":
+                grid_sm = nch["surface_soil_moisture"][:]
+            elif varname == "sigma_vv":
+                grid_sigma = nch["sigma_vv"][:]
+            elif varname == "sigma_vh":        
+                grid_sigma = nch["sigma_vh"][:]
+            elif varname == "inc_angle":
+                grid_sigma = nch["inc_angle"][:]                
+
             nch.close()
         else:
             logging.warning("Warning file %s does not exists", filename)
@@ -926,4 +975,10 @@ def read_sentinel_nc(infiles):
     if grid_lons is None or grid_lats is None or grid_sm is None:
         raise Exception("No files were read properly")
 
-    return grid_lons, grid_lats, grid_sm
+
+#    plt.figure()
+#    plt.imshow((grid_sigma[400:1200,300:800]))
+#    plt.colorbar()
+#    plt.show()
+
+    return grid_lons[400:1400,300:1000], grid_lats[400:1400,300:1000], grid_sm, grid_sigma[400:1400,300:1000]

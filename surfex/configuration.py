@@ -572,8 +572,8 @@ class ConfigurationFromHarmonie(Configuration):
             self.update_setting("SURFEX#ASSIM#SCHEMES#ISBA", "OI")
         if anasurf == "EKF" or anasurf == "CANARI_EKF_SURFEX":
             self.update_setting("SURFEX#ASSIM#SCHEMES#ISBA", "EKF")
-        if anasurf == "ENKF":
-            self.update_setting("SURFEX#ASSIM#SCHEMES#ISBA", "ENKF")
+        if anasurf == "ENSRKF":
+            self.update_setting("SURFEX#ASSIM#SCHEMES#ISBA", "ENSRKF")
 
         # Active EKF control variables from CVAR_M
         if "NNCV" in env:
@@ -620,21 +620,21 @@ class ConfigurationFromHarmonie(Configuration):
             xerrobs_m = list(map(float, xerrobs_m.split(",")))
             self.update_setting("SURFEX#ASSIM#OBS#XERROBS_M", xerrobs_m)
 
-        # Active EnKF control variables from CVAR_M
+        # Active EnSRKF control variables from CVAR_M
         if "NNCV" in env:
             nncv = env["NNCV"]
             nncv = list(map(int, nncv.split(",")))
-            self.update_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV", nncv)
+            self.update_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV", nncv)
 
         if "CVAR_M" in env:
             cvar_m = env["CVAR_M"]
             cvar_m = list(map(str, cvar_m.split(",")))
-            self.update_setting("SURFEX#ASSIM#ISBA#ENKF#CVAR_M", cvar_m)
+            self.update_setting("SURFEX#ASSIM#ISBA#ENSRKF#CVAR_M", cvar_m)
 
         if "NENS_M" in env:
             nens_m = env["NENS_M"]
-            self.update_setting("SURFEX#ASSIM#ISBA#ENKF#NENS_M", int(nens_m))
-
+            self.update_setting("SURFEX#ASSIM#ISBA#ENSRKF#NENS_M", int(nens_m))
+        
         # Observations
         if "NOBSTYPE_M" in env:
             nobstype_m = env["NOBSTYPE_M"]

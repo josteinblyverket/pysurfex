@@ -789,13 +789,13 @@ class BaseNamelist(object):
                     nvar += 1
             self.input_list.append({"json": {"NAM_VAR": {"NVAR": nvar}}})
 
-        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
+        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
             self.input_list.append({"json": {"NAM_ASSIM": {
                 "CASSIM_ISBA": self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA")}}})
             nvar = 0
-            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#CVAR_M")
-            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
-            # nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NENS_M")
+            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#CVAR_M")
+            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
+            nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NENS_M")
             for var, cvar_val in enumerate(cvar_m):
                 self.input_list.append({"json": {"NAM_VAR": {
                     "CVAR_M(" + str(var + 1) + ")": cvar_val}}})
@@ -974,10 +974,10 @@ class BaseNamelist(object):
                 "LBFIXED": not self.config.get_setting("SURFEX#ASSIM#ISBA#EKF#EVOLVE_B")
             }}})
 
-        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
+        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
             nvar = 0
-            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#CVAR_M")
-            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
+            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#CVAR_M")
+            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
             if len(nncv) != len(cvar_m):
                 raise Exception("Mismatch in nncv/cvar_m")
             for var, cvar_val in enumerate(cvar_m):
@@ -1765,17 +1765,17 @@ class Namelist(object):
             merged_dict = self.sub(merged_dict, "NAM_VAR", "NVAR", nvar)
             # self.input_list.append({"json": {"NAM_VAR": {"NVAR": nvar}}})
 
-        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
+        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
 
             merged_dict = \
                 self.merge_json_namelist_file(merged_dict,
                                               self.input_path + "/offline_assim_pert.json")
-            merged_dict = self.sub(merged_dict, "NAM_ASSIM", "CASSIM_ISBA", "ENKF")
+            merged_dict = self.sub(merged_dict, "NAM_ASSIM", "CASSIM_ISBA", "ENSRKF")
 
             nvar = 0
-            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#CVAR_M")
-            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
-            # nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NENS_M")
+            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#CVAR_M")
+            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
+            # nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NENS_M")
             for var, cvar_val in enumerate(cvar_m):
                 # print(merged_dict)
                 merged_dict = self.sub(merged_dict, "NAM_VAR", "CVAR_M(@VAR@)", cvar_val, var=var + 1)
@@ -1961,12 +1961,12 @@ class Namelist(object):
             merged_dict = self.sub(merged_dict, "NAM_IO_VARASSIM", "LBFIXED",
                                    not self.config.get_setting("SURFEX#ASSIM#ISBA#EKF#EVOLVE_B"))
 
-        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
+        if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
             merged_dict = self.merge_json_namelist_file(merged_dict,
-                                                        self.input_path + "/soda_isba_enkf.json")
+                                                        self.input_path + "/soda_isba_ensrkf.json")
             nvar = 0
-            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#CVAR_M")
-            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
+            cvar_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#CVAR_M")
+            nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
             if len(nncv) != len(cvar_m):
                 raise Exception("Mismatch in nncv/cvar_m")
             for var, cvar_val in enumerate(cvar_m):
@@ -2668,8 +2668,8 @@ class SodaInputData(surfex.JsonInputData):
                 self.add_data(data)
             if self.config.setting_is("SURFEX#ASSIM#SCHEMES#ISBA", "OI"):
                 self.add_data(self.set_input_vertical_soil_oi())
-            if self.config.setting_is("SURFEX#ASSIM#SCHEMES#ISBA", "ENKF"):
-                self.add_data(self.set_input_vertical_soil_enkf(check_existence=check_existence,
+            if self.config.setting_is("SURFEX#ASSIM#SCHEMES#ISBA", "ENSRKF"):
+                self.add_data(self.set_input_vertical_soil_ensrkf(check_existence=check_existence,
                                                                 masterodb=masterodb,
                                                                 pert_fp=perturbed_file_pattern))
 
@@ -2926,9 +2926,9 @@ class SodaInputData(surfex.JsonInputData):
             ekf_settings.update({target: lsmfile})
         return ekf_settings
 
-    def set_input_vertical_soil_enkf(self, check_existence=True, masterodb=True,
+    def set_input_vertical_soil_ensrkf(self, check_existence=True, masterodb=True,
                                      pert_fp=None, geo=None):
-        """Input data for ENKF in soil.
+        """Input data for ENSRKF in soil.
 
         Args:
             check_existence (bool, optional): _description_. Defaults to True.
@@ -2947,7 +2947,7 @@ class SodaInputData(surfex.JsonInputData):
         cmm = self.dtg.strftime("%m")
         cdd = self.dtg.strftime("%d")
         chh = self.dtg.strftime("%H")
-        enkf_settings = {}
+        ensrkf_settings = {}
 
         # First guess for SURFEX
         csurf_filetype = self.config.get_setting("SURFEX#IO#CSURF_FILETYPE").lower()
@@ -2980,14 +2980,14 @@ class SodaInputData(surfex.JsonInputData):
         if csurf_filetype == "fa":
             extension = "fa"
 
-        nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NENS_M")
+        nens_m = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NENS_M")
 
-        enkf_settings.update({"PREP_INIT." + extension: first_guess})
-        enkf_settings.update({"PREP_" + cyy + cmm + cdd + "H" + chh + "." + extension: first_guess})
-        enkf_settings.update({"PREP_" + cyy + cmm + cdd + "H" + chh + "_EKF_ENS" + str(nens_m) + "."
+        ensrkf_settings.update({"PREP_INIT." + extension: first_guess})
+        ensrkf_settings.update({"PREP_" + cyy + cmm + cdd + "H" + chh + "." + extension: first_guess})
+        ensrkf_settings.update({"PREP_" + cyy + cmm + cdd + "H" + chh + "_EKF_ENS" + str(nens_m) + "."
                               + extension: first_guess})
 
-        # nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
+        # nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
         # pert_enkf = 0
         # pert_input = 0
         for ppp in range(0, nens_m):
@@ -3008,7 +3008,7 @@ class SodaInputData(surfex.JsonInputData):
                                                                    pert=ppp)
 
             target = "PREP_" + cyy + cmm + cdd + "H" + chh + "_EKF_ENS" + str(ppp) + "." + extension
-            enkf_settings.update({target: perturbed_run})
+            ensrkf_settings.update({target: perturbed_run})
 
         # LSM
         # Fetch first_guess needed for LSM for extrapolations
@@ -3026,5 +3026,5 @@ class SodaInputData(surfex.JsonInputData):
                                                              default_dir="assim_dir",
                                                              validtime=self.dtg, basedtg=fg_dtg,
                                                              check_existence=check_existence)
-            enkf_settings.update({target: lsmfile})
-        return enkf_settings
+            ensrkf_settings.update({target: lsmfile})
+        return ensrkf_settings
