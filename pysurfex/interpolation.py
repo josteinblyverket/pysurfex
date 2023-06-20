@@ -98,7 +98,7 @@ class Points:
         for i in range(0, self.lons.shape[0]):
             lon = self.lons[i]
             lat = self.lats[i]
-            neighbours = grid.grid.get_num_neighbours(lat, lon, distance)
+            neighbours = grid.grid.get_num_neighbours(np.float64(lat), np.float64(lon), distance)
             if neighbours == 0:
                 inside_grid.append(False)
             else:
