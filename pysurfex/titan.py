@@ -3,6 +3,7 @@ import abc
 import json
 import logging
 import os
+import time
 
 import numpy as np
 
@@ -137,6 +138,8 @@ class Plausibility(QualityControl):
             global_flags(list): Global flags.
 
         """
+        start = time.time()
+
         if tit is None:
             raise ModuleNotFoundError("titanlib was not loaded properly")
 
@@ -166,6 +169,28 @@ class Plausibility(QualityControl):
                 global_flags[mask_ind],
             )
 
+        #mask = np.array(mask)
+        #global_flags = np.array(global_flags)        
+        #flags = np.array(flags)
+#
+        #idx = (global_flags[mask] == 0) and (flags[:] == 1)
+        #idn = np.where(idx)[0]
+        #global_flags[idn] = code
+        
+
+        #for i, mask_ind in enumerate(mask):
+        #    logging.debug(
+        #        "test=%s i=%s m_i=%s value(m_i)=%s flag(i)=%s global_flag(m_i)=%s",
+        #        self.name,
+        #        i,
+        #        mask_ind,
+        #        dataset.values[mask_ind],
+        #        flags[i],
+        #        global_flags[mask_ind],
+        #    )
+        end = time.time()
+        print("plaus time")
+        print(end - start)
         return global_flags
 
 
@@ -256,6 +281,8 @@ class FirstGuess(QualityControl):
         if tit is None:
             raise ModuleNotFoundError("titanlib was not loaded properly")
 
+        start = time.time()
+
         fg_operator = ObsOperator(
             self.operator,
             self.geo_in,
@@ -299,6 +326,9 @@ class FirstGuess(QualityControl):
                 global_flags[mask_ind],
                 fg_vals[mask_ind],
             )
+        end = time.time()
+        print("FG test")
+        print(end - start)
 
         return global_flags
 
@@ -387,6 +417,8 @@ class Fraction(QualityControl):
             ModuleNotFoundError: titanlib was not loaded properly
 
         """
+
+        start = time.time()
         if tit is None:
             raise ModuleNotFoundError("titanlib was not loaded properly")
 
@@ -421,30 +453,38 @@ class Fraction(QualityControl):
         logging.info("Done test")
 
         global_flags = dataset.flags
-        for i, mask_ind in enumerate(mask):
-            if fraction.is_in_grid(mask_ind):
-                if int(global_flags[mask_ind]) == 0 and int(flags[i]) == 1:
-                    global_flags[mask_ind] = code
-            else:
-                global_flags[mask[i]] = 199
+        #for i, mask_ind in enumerate(mask):
+        #    if fraction.is_in_grid(mask_ind):
+        #        if int(global_flags[mask_ind]) == 0 and int(flags[i]) == 1:
+        #            global_flags[mask_ind] = code
+        #    else:
+        #        global_flags[mask[i]] = 199
 
-        for i, mask_ind in enumerate(mask):
-            logging.debug(
-                "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s min_val(i)=%s value(i)=%s "
-                "maxval(i)=%s flag(i)=%s global_flag(m_i)=%s fraction(m_i)=%s",
-                self.name,
-                i,
-                mask_ind,
-                dataset.lons[mask_ind],
-                dataset.lats[mask_ind],
-                minvals[i],
-                values[i],
-                maxvals[i],
-                flags[i],
-                global_flags[mask_ind],
-                fraction_vals[mask_ind],
-            )
+        mask_indices = np.arange(len(mask))[fraction.is_in_grid(mask)]
+        update_indices = (int(global_flags[mask_indices]) == 0) & (int(flags[mask_indices]) == 1)
+        global_flags[mask_indices[update_indices]] = code
+        global_flags[~fraction.is_in_grid(mask)] = 199
 
+
+        #for i, mask_ind in enumerate(mask):
+        #    logging.debug(
+        #        "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s min_val(i)=%s value(i)=%s "
+        #        "maxval(i)=%s flag(i)=%s global_flag(m_i)=%s fraction(m_i)=%s",
+        #        self.name,
+        #        i,
+        #        mask_ind,
+        #        dataset.lons[mask_ind],
+        #        dataset.lats[mask_ind],
+        #        minvals[i],
+        #        values[i],
+        #        maxvals[i],
+        #        flags[i],
+        #        global_flags[mask_ind],
+        #        fraction_vals[mask_ind],
+        #    )
+        end = time.time()
+        print("Fraction test")
+        print(end - start)
         return global_flags
 
 
@@ -1092,6 +1132,8 @@ class Blacklist(QualityControl):
 
         """
         flags = dataset.flags
+        
+        start = time.time()
         for i, lon_val in enumerate(dataset.lons):
             if i in mask:
 
@@ -1108,18 +1150,20 @@ class Blacklist(QualityControl):
                     logging.debug("Found blacklisted stid: %s", str(stid))
                     flags[i] = code
 
-        for i, mask_ind in enumerate(mask):
-            logging.debug(
-                "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s stid(m_i)=%s flag(m_i)=%s",
-                self.name,
-                i,
-                mask_ind,
-                dataset.lons[mask_ind],
-                dataset.lats[mask_ind],
-                dataset.stids[mask_ind],
-                flags[mask_ind],
-            )
-
+        #for i, mask_ind in enumerate(mask):
+        #    logging.debug(
+        #        "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s stid(m_i)=%s flag(m_i)=%s",
+        #        self.name,
+        #        i,
+        #        mask_ind,
+        #        dataset.lons[mask_ind],
+        #        dataset.lats[mask_ind],
+        #        dataset.stids[mask_ind],
+        #        flags[mask_ind],
+        #    )
+        end = time.time()
+        print("blacklist")
+        print(end - start)
         return flags
 
 
@@ -1160,26 +1204,39 @@ class DomainCheck(QualityControl):
             flags(list): Flags.
 
         """
+        start = time.time()
+
         flags = dataset.flags
         in_grid = inside_grid(
             self.lons, self.lats, dataset.lons, dataset.lats, distance=self.max_distance
         )
         # TODO vectorize
-        for __, mask_ind in enumerate(mask):
-            if not in_grid[mask_ind]:
-                flags[mask_ind] = code
 
-        for i, mask_ind in enumerate(mask):
-            logging.debug(
-                "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s stid(m_i)=%s flag(m_i)=%s",
-                self.name,
-                i,
-                mask_ind,
-                dataset.lons[mask_ind],
-                dataset.lats[mask_ind],
-                dataset.stids[mask_ind],
-                flags[mask_ind],
-            )
+        mask = np.array(mask)    
+        in_grid = np.array(in_grid)    
+        mask_ind = np.where(~in_grid[mask])[0]
+        flags[mask_ind] = code
+        
+
+        #for __, mask_ind in enumerate(mask):
+        #    if not in_grid[mask_ind]:
+        #        flags[mask_ind] = code
+
+        end = time.time()
+        print("Runtime")
+        print(end - start)
+
+        #for i, mask_ind in enumerate(mask):
+        #    logging.debug(
+        #        "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s stid(m_i)=%s flag(m_i)=%s",
+        #        self.name,
+        #        i,
+        #        mask_ind,
+        #        dataset.lons[mask_ind],
+        #        dataset.lats[mask_ind],
+        #        dataset.stids[mask_ind],
+        #        flags[mask_ind],
+        #    )
         return flags
 
 
@@ -1205,6 +1262,7 @@ class NoMeta(QualityControl):
             flags(list): Flags.
 
         """
+        start = time.time()
         flags = dataset.flags
         for mask_ind in mask:
             if np.isnan(dataset.elevs[mask_ind]):
@@ -1222,6 +1280,21 @@ class NoMeta(QualityControl):
                 flags[mask_ind],
             )
 
+        #for i, mask_ind in enumerate(mask):
+        #    logging.debug(
+        #        "test=%s i=%s m_i=%s lon(m_i)=%s lat(m_i)=%s stid(m_i)=%s flag(m_i)=%s",
+        #        self.name,
+        #        i,
+        #        mask_ind,
+        #        dataset.lons[mask_ind],
+        #        dataset.lats[mask_ind],
+        #        dataset.stids[mask_ind],
+        #        flags[mask_ind],
+        #    )
+
+        end = time.time()
+        print("nometa test")
+        print(end - start)
         return flags
 
 
@@ -1246,6 +1319,8 @@ def define_quality_control(test_list, settings, an_time, domain_geo=None, blackl
         tests(list): List of QualityControl objects
 
     """
+    start = time.time()
+
     tests = []
     for qct in test_list:
         logging.info("Set up test: %s", qct)
@@ -1410,6 +1485,9 @@ def define_quality_control(test_list, settings, an_time, domain_geo=None, blackl
         else:
             raise NotImplementedError(f"Test {qct} is not implemented")
 
+    end = time.time()
+    print("define qc tests")
+    print(end - start)
     return tests
 
 
@@ -1444,6 +1522,8 @@ class QCDataSet(object):
             remove_invalid_elevs (bool, optional): Remove invalid elevations. Defaults to False.
 
         """
+        start = time.time()
+
         self.analysis_time = analysis_time
         self.index_pos = {}
         self.index_stid = {}
@@ -1508,6 +1588,9 @@ class QCDataSet(object):
             for __ in range(0, len(observations)):
                 an_dep.append(np.nan)
         self.an_dep = an_dep
+        end = time.time()
+        print("construct qc dataset")
+        print(end - start)
 
     def get_stid_index(self, stid):
         """Get station ID index.
@@ -1656,6 +1739,7 @@ class TitanDataSet(QCDataSet):
             ModuleNotFoundError: itanlib was not loaded properly
 
         """
+        start = time.time()
         if tit is None:
             raise ModuleNotFoundError("titanlib was not loaded properly")
 
@@ -1735,9 +1819,13 @@ class TitanDataSet(QCDataSet):
             passed_tests=None,
             remove_invalid_elevs=False,
         )
+        end = time.time()
+        print("QC dataset")
+        print(end - start)
 
     def perform_tests(self):
         """Perform the tests."""
+        start = time.time()
         summary = {}
         for test in self.tests:
             print("Test: ", test.name)
@@ -1858,6 +1946,9 @@ class TitanDataSet(QCDataSet):
             logging.info("      ok: %s", summary[test.name]["ok"])
             logging.info("     bad: %s %s", summary[test.name]["bad"], outside)
             logging.info("\n")
+        end = time.time()
+        print("perform the tests")
+        print(end - start)
 
 
 class Departure(object):
