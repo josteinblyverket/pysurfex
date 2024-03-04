@@ -125,7 +125,7 @@ CFILE_FORMAT_LSM = "ASCII"              # File format for land sea mask when usi
 [SURFEX.ASSIM.SCHEMES]
 SEA = "NONE"                         # Assimilation method for sea tile: "INPUT"|"NONE"
 INLAND_WATER = "INPUT"               # Assimilation method for water tile: "INPUT"|"NONE"
-ISBA = "ENKF"                         # Assimilation method for ISBA soil: "NONE"|"OI"|"EKF"
+ISBA = "ENSRKF"                         # Assimilation method for ISBA soil: "NONE"|"OI"|"EKF"
 TEB = "NONE"                         # Assimilation method for TEB tile: "NONE"|"ROADT"
 
 [SURFEX.ASSIM.OBS]
@@ -133,7 +133,7 @@ LOBSHEADER = false                          # ASCII observation file has header
 CFILE_FORMAT_OBS = "ASCII"                  # File format for observations when using SODA: "ASCII"|"FA"
 LOBSNAT = false                             # Observation ASCII file only contains nature points
 COBS_M = ["T2M","HU2M","WG2 ","LAI","SWE"]  # Observation types
-NNCO = [1, 1, 0, 0, 1]                      # Active observation types
+NNCO = [1, 1, 0, 0, 0]                      # Active observation types
 XERROBS_M = [0.4, 0.1, 0.1, 0.1, 20.0]      # Observation error (used in EKF)
 LSWE = false                                # Assimilate SWE, if false assimilate snow depth
 NOBSTYPE_M=2                                # Number of assimilated observations in the EnKF
@@ -178,8 +178,8 @@ LLINCHECK = true                             # Linerarity check of jacobians
 XALPHA = 0.2                                 # Alpha used in linerarity check of jacobians
 
 # EnKF settings
-[SURFEX.ASSIM.ISBA.ENKF]
+[SURFEX.ASSIM.ISBA.ENSRKF]
 NNCV = [1,1,1,1,1,1]                             # Active EnKF control variables
 CVAR_M = ["TG1", "TG2", "TG3", "WG2" , "WG3", "WG4"]       # Control variables
 NENS_M=16                                    # Number of ensemble members
-LPASSIVE_MODE=false
+LPASSIVE_MODE=false                          # True|False false update ensemble true set analysis to FG values (for bias correction) 

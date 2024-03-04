@@ -37,8 +37,8 @@ class NamelistGenerator(object):
             nncv = None
             if soil_assim == "EKF":
                 nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#EKF#NNCV")
-            if soil_assim == "ENKF":
-                nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENKF#NNCV")
+            if soil_assim == "ENSRKF":
+                nncv = self.config.get_setting("SURFEX#ASSIM#ISBA#ENSRKF#NNCV")
             nvar = 0
             if nncv is not None:
                 for __, cval in enumerate(nncv):
@@ -240,8 +240,8 @@ class NamelistGenerator(object):
                     if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "EKF":
                         input_blocks += ["offline_pert_isba_ekf"]
 
-                    if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
-                        input_blocks += ["offline_pert_isba_enkf"]
+                    if self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
+                        input_blocks += ["offline_pert_isba_ensrkf"]
 
                 input_blocks += ["offline_pert_obs"]
 
@@ -262,8 +262,8 @@ class NamelistGenerator(object):
             elif self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "EKF":
                 input_blocks += ["soda_isba_ekf"]
 
-            elif self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENKF":
-                input_blocks += ["soda_isba_enkf"]
+            elif self.config.get_setting("SURFEX#ASSIM#SCHEMES#ISBA") == "ENSRKF":
+                input_blocks += ["soda_isba_ensrkf"]
 
             # Town
             if self.config.get_setting("SURFEX#ASSIM#SCHEMES#TEB").lower() != "none":

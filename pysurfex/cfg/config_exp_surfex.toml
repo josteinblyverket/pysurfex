@@ -178,7 +178,7 @@ LLINCHECK = true                             # Linerarity check of jacobians
 XALPHA = 0.2                                 # Alpha used in linerarity check of jacobians
 
 # EnKF settings
-[SURFEX.ASSIM.ISBA.ENKF]
+[SURFEX.ASSIM.ISBA.ENSRKF]
 NNCV = [1,1,1,1,1,1]                             # Active EnKF control variables
 CVAR_M = ["TG1", "TG2", "TG3", "WG2" , "WG3", "WG4"]       # Control variables
 NENS_M=16                                    # Number of ensemble members
